@@ -6,6 +6,10 @@ function App() {
   const [player, setPlayer] = useState('X'); // start with player X
   const [winner, setWinner] = useState(null); // winner is null until someone wins or it's a draw
 
+  const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
+  const [stepNumber, setStepNumber] = useState(0);
+  const [xIsNext, setXIsNext] = useState(true);
+
   const handleClick = (index) => {
     if (board[index] === null && winner === null) { // check if the cell is empty and there's no winner yet
       const newBoard = [...board]; // create a copy of the board
@@ -40,12 +44,36 @@ function App() {
         setPlayer(player === 'X' ? 'O' : 'X'); // switch the player after each turn
       }
     }
+
+    const newHistory = history.slice(0, stepNumber + 1);
+    const current = newHistory[newHistory.length - 1];
+    const squares = current.squares.slice();
+
+    squares[index] = xIsNext ? "X" : "O";
+    setHistory(newHistory.concat([{ squares: squares }]));
+    setStepNumber(newHistory.length);
+    setXIsNext(!xIsNext);
+
   };
 
   const handleReset = () => {
     setBoard(Array(9).fill(null)); // reset the board to null values
     setPlayer('X'); // reset the player to X
     setWinner(null); // reset the winner to null
+  };
+  
+  function handleUndo() {
+    if (stepNumber > 0) {
+      setStepNumber(stepNumber - 1);
+      setXIsNext((stepNumber - 1) % 2 === 0);
+    }
+  }
+  
+  const handleRedo = () => {
+    if (stepNumber < history.length - 1) {
+      setStepNumber(stepNumber + 1);
+      setXIsNext(stepNumber % 2 === 0);
+    }
   };
 
   return (
@@ -64,6 +92,14 @@ function App() {
         ))}
       </div>
       <button onClick={handleReset}>Reset</button>
+      {/* <div>{status}</div> */}
+        <button onClick={handleUndo} disabled={stepNumber === 0}>
+        Undo
+        </button>
+      <button onClick={handleRedo} disabled={stepNumber === history.length - 1}>
+        Redo
+      </button>
+
     </div>
   );
 }
